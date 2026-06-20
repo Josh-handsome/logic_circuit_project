@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squential Circuit Design System(1140502葉嘉恩)</title>
+    <style>
+        :root {
+            --primary: #0056b3;
+            --bg-gray: #f4f6f8;
+            --border: #ccc;
+            --box-bg: #ffffff;
+            --text-main: #333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f5;
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+        header {
+            background-color: #1a2a3a;
+            color: white;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            align-items: center;
+        }
+        .container {
+            display: flex;
+            flex: 1;
+            background: white;
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+        }
+        /* 左側設定區 */
+        .sidebar {
+            width: 380px;
+            background: var(--bg-gray);
+            border-right: 1px solid var(--border);
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .panel {
+            background: var(--box-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .panel-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .radio-group label {
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        table.state-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        table.state-table th, table.state-table td {
+            border: 1px solid var(--border);
+            padding: 4px;
+        }
+        table.state-table th { background: #e9ecef;
+        }
+        table.state-table input {
+            width: 80%;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 4px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            min-width: 100px;
+            transition: 0.2s;
+        }
+        .btn-add { background: #28a745; color: white; flex-basis: 100%;
+        }
+        .btn-add:hover { background: #218838;
+        }
+        .btn-clear { background: #e0e0e0; color: #333;
+        }
+        .btn-clear:hover { background: #d0d0d0;
+        }
+        .btn-generate { background: var(--primary); color: white;
+        }
+        .btn-generate:hover { background: #004494;
+        }
+
+        /* 右側輸出區 */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .hidden { display: none !important;
+        }
+        .output-box {
+            border: 1px solid #4a90e2;
+            border-radius: 6px;
+            padding: 15px;
+            background: #f9fcff;
+        }
+        .output-title {
+            color: #4a90e2;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        .info-text { font-size: 0.9rem; color: #555;
+        margin-bottom: 15px; }
+        .equations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .eq-item { font-family: monospace; font-size: 1.1rem;
+            background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
+        }
+        
+        .kmap-container { display: flex;
+            gap: 20px; flex-wrap: wrap; }
+        .kmap { border-collapse: collapse; text-align: center; margin-bottom: 10px;
+            background: #fff; }
+        .kmap th, .kmap td { border: 1px solid #999;
+            width: 40px; height: 40px; }
+        .kmap th { background: #eef; font-weight: normal;
+            font-size: 0.8rem;}
+        
+        .svg-container {
+            width: 100%;
+            overflow-x: auto;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 10px 0;
+        }
+        svg { min-width: 900px; height: 550px; display: block;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <span>⚙️ Squential Circuit Design System(1140502葉嘉恩)</span>
+</header>
+
+<div class="container">
+    <div class="sidebar">
+        <div class="panel" style="border-color: #e74c3c;">
+            <div class="panel-title">1. 模型與正反器選擇</div>
+            <div class="radio-group" style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                <label><input type="radio" name="model" value="Mealy" checked> Mealy</label>
+                <label><input type="radio" name="model" value="Moore"> Moore</label>
+            </div>
+            <div class="radio-group">
+                <label><input type="radio" name="ff" value="D"> D-FF</label>
+                <label><input type="radio" name="ff" value="T"> T-FF</label>
+                <label><input type="radio" name="ff" value="SR"> SR-FF</label>
+                <label><input type="radio" name="ff" value="JK" checked> JK-FF</label>
+            </div>
+        </div>
+
+        <div class="panel" style="border-color: #e74c3c;">
+            <div class="panel-title">2. 狀態表輸入 (State Table)</div>
+            <table class="state-table" id="stateTable">
+                <thead>
+                    <tr>
+                        <th>現態(PS)</th>
+                        <th>輸入(X)</th>
+                        <th>次態(NS)</th>
+                        <th>輸出(Z)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
+            <div class="btn-group">
+                <button class="btn-add" onclick="addRow()">+ 增加一行</button>
+                <button class="btn-clear" onclick="clearTable()">清除表格</button>
+                <button class="btn-generate" onclick="generateCircuit()">開始運算</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content hidden" id="outputSection">
+        <div class="output-box">
+            <div class="output-title">OUTPUT 1: 狀態配置與輸入方程式</div>
+            <div class="info-text" id="stateAllocationInfo"></div>
+            <div class="equations-grid" id="eqResult"></div>
+        </div>
+
+        <div class="output-box">
+            <div class="output-title">OUTPUT 2: 卡諾圖 (K-Maps)</div>
+            <div class="kmap-container" id="kmapResult"></div>
+        </div>
+
+        <div class="output-box" style="border-color: #7ed321;">
+            <div class="output-title">OUTPUT 3: 邏輯閘級電路圖 (Gate-Level Schematic)</div>
+            <div class="info-text">支援正交佈線 (Rectilinear Routing) 與獨立邏輯閘繪製</div>
+            <div class="svg-container" id="svgContainer"></div>
+         </div>
+    </div>
+</div>
+
+<script>
+    const defaultData = [
+        { ps: 'A', x: '0', ns: 'A', z: '0' }, { ps: 'A', x: '1', ns: 'B', z: '0' },
+        { ps: 'B', x: '0', ns: 'C', z: '1' }, { ps: 'B', x: '1', ns: 'A', z: '0' }
+    ];
+    function initTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        for (let i = 0; i < 4; i++) {
+            appendRow(defaultData[i]);
+        }
+    }
+
+    function appendRow(data = { ps: '', x: '', ns: '', z: '' }) {
+        const tbody = document.getElementById('tableBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" value="${data.ps}" maxlength="1" style="text-transform:uppercase"></td>
+            <td><input type="text" value="${data.x}" maxlength="1"></td>
+            <td><input type="text" value="${data.ns}" maxlength="1" style="text-transform:uppercase"></td>
+            <td><input type="text" value="${data.z}" maxlength="1"></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    function addRow() { appendRow(); }
+
+    function clearTable() {
+        document.querySelectorAll('#tableBody input').forEach(input => input.value = '');
+        document.getElementById('outputSection').classList.add('hidden');
+    }
+
+    function getExcitation(ffType, q, qNext) {
+        if (q === 'X' || qNext === 'X') return { p1: 'X', p2: 'X' };
+        const t = q + qNext;
+        if (ffType === 'D') return { p1: qNext };
+        if (ffType === 'T') return { p1: (q === qNext ? '0' : '1') };
+        if (ffType === 'SR') {
+            if (t === '00') return { p1: '0', p2: 'X' };
+            if (t === '01') return { p1: '1', p2: '0' };
+            if (t === '10') return { p1: '0', p2: '1' };
+            if (t === '11') return { p1: 'X', p2: '0' };
+        }
+        if (ffType === 'JK') {
+            if (t === '00') return { p1: '0', p2: 'X' };
+            if (t === '01') return { p1: '1', p2: 'X' };
+            if (t === '10') return { p1: 'X', p2: '1' };
+            if (t === '11') return { p1: 'X', p2: '0' };
+        }
+        return { p1: 'X', p2: 'X' };
+    }
+
+    function parseInput() {
+        const rows = document.querySelectorAll('#tableBody tr');
+        let statesSet = new Set();
+        let rawData = [];
+        
+        rows.forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            const ps = inputs[0].value.toUpperCase();
+            const x = inputs[1].value;
+            const ns = inputs[2].value.toUpperCase();
+            const z = inputs[3].value;
+            if (ps && x) {
+                statesSet.add(ps);
+                if(ns) statesSet.add(ns);
+                rawData.push({ ps, x, ns, z: z || 'X' });
+            }
+        });
+        let states = Array.from(statesSet).sort();
+        if(states.length === 0) return null;
+        
+        let ffCount = states.length > 2 ? 2 : 1;
+        if(states.length > 4) {
+            alert("網頁版目前最多支援 4 個狀態 (2 個正反器)，多餘狀態將被忽略。");
+            states = states.slice(0, 4);
+            ffCount = 2;
+        }
+
+        let stateMap = {};
+        states.forEach((s, i) => {
+            stateMap[s] = ffCount === 1 ? i.toString(2) : i.toString(2).padStart(2, '0');
+        });
+        return { rawData, stateMap, ffCount };
+    }
+
+    function solveLogic(dataArray, numVars, varNames) {
+        let ones = [], dcs = [];
+        for(let i=0; i<dataArray.length; i++) {
+            if(dataArray[i] === '1') ones.push(i);
+            if(dataArray[i] === 'X') dcs.push(i);
+        }
+        if(ones.length === 0) return { str: "0", terms: [] };
+        if(ones.length + dcs.length === dataArray.length) return { str: "1", terms: [] };
+
+        let validImplicants = [];
+        let formatStr = (val, mask) => {
+            let res = [];
+            for(let i=0; i<numVars; i++) {
+                if((mask & (1 << (numVars-1-i))) === 0) {
+                    let bit = (val & (1 << (numVars-1-i))) ? 1 : 0;
+                    res.push({ var: varNames[i], val: bit });
+                }
+            }
+            return res;
+        };
+
+        for(let mask=0; mask < (1<<numVars); mask++) {
+            for(let val=0; val < (1<<numVars); val++) {
+                if((val & mask) !== 0) continue;
+                let coversZero = false, coveredOnes = [];
+                for(let i=0; i < (1<<numVars); i++) {
+                    if((i & ~mask) === val) {
+                        if(dataArray[i] === '0') coversZero = true;
+                        if(dataArray[i] === '1') coveredOnes.push(i);
+                    }
+                }
+                if(!coversZero && coveredOnes.length > 0) {
+                    validImplicants.push({ term: formatStr(val, mask), covers: coveredOnes, cost: numVars - mask.toString(2).split('1').length + 1 });
+                }
+            }
+        }
+
+        validImplicants.sort((a,b) => a.cost - b.cost || b.covers.length - a.covers.length);
+        let selectedTerms = [];
+        let uncovered = new Set(ones);
+
+        while(uncovered.size > 0) {
+            let best = null, bestCount = -1;
+            for(let imp of validImplicants) {
+                let count = imp.covers.filter(x => uncovered.has(x)).length;
+                if(count > bestCount) { bestCount = count; best = imp; }
+            }
+            selectedTerms.push(best.term);
+            best.covers.forEach(x => uncovered.delete(x));
+        }
+
+        let strArr = selectedTerms.map(t => {
+            if(t.length === 0) return '1';
+            return t.map(v => v.val ? v.var : v.var + "'").join('');
+        });
+        return { str: strArr.join(' + '), terms: selectedTerms };
+    }
+
+    function createKMap2Var(title, data) {
+        return `<div style="text-align:center;"><strong>${title}</strong>
+            <table class="kmap" style="margin:5px auto;">
+                <tr><th>X \\ Q0</th><th>0</th><th>1</th></tr>
+                <tr><th>0</th><td>${data[0]}</td><td>${data[2]}</td></tr>
+                <tr><th>1</th><td>${data[1]}</td><td>${data[3]}</td></tr>
+            </table></div>`;
+    }
+
+    function createKMap3Var(title, data) {
+        let idx = [[0, 2, 6, 4], [1, 3, 7, 5]];
+        return `<div style="text-align:center;"><strong>${title}</strong>
+            <table class="kmap" style="margin:5px auto;">
+                <tr><th>X \\ Q1Q0</th><th>00</th><th>01</th><th>11</th><th>10</th></tr>
+                <tr><th>0</th><td>${data[idx[0][0]]}</td><td>${data[idx[0][1]]}</td><td>${data[idx[0][2]]}</td><td>${data[idx[0][3]]}</td></tr>
+                <tr><th>1</th><td>${data[idx[1][0]]}</td><td>${data[idx[1][1]]}</td><td>${data[idx[1][2]]}</td><td>${data[idx[1][3]]}</td></tr>
+            </table></div>`;
+    }
+
+    function drawLogicCircuit(ffCount, ffType, sortedEquations) {
+        let w = 1000, h = 550;
+        let svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+            <style>
+                .wire { stroke: #0984e3; stroke-width: 2.5; fill: none; stroke-linejoin: round; }
+                .wire-dot { fill: #0984e3; }
+                .feedback-wire { stroke: #10ac84; stroke-width: 2.5; fill: none; stroke-linejoin: round; }
+                .feedback-dot { fill: #10ac84; }
+                .clk-wire { stroke: #ee5253; stroke-width: 2.5; fill: none; stroke-linejoin: round; }
+                .bus-line { stroke: #b2bec3; stroke-width: 3; stroke-linecap: round; }
+                .gate { fill: #f1f2f6; stroke: #2d3436; stroke-width: 2; }
+                .ff-box { fill: #fff; stroke: #e17055; stroke-width: 2.5; }
+                .text { font-family: monospace; font-size: 14px; fill: #2d3436; }
+                .text-bold { font-family: monospace; font-size: 16px; font-weight: bold; fill: #2d3436; }
+                .text-sm { font-family: monospace; font-size: 12px; fill: #636e72; }
+                .text-bus { font-family: monospace; font-size: 14px; font-weight: bold; fill: #b2bec3; }
+            </style>
+        `;
+
+        let busX = { 'X': 60, "X'": 90, 'Q0': 130, "Q0'": 160 };
+        if(ffCount === 2) { busX['Q1'] = 200; busX["Q1'"] = 230; }
+        
+        for (let [name, x] of Object.entries(busX)) {
+            svg += `<text x="${x-10}" y="30" class="text-bus">${name}</text>`;
+            svg += `<path d="M ${x} 40 V ${h-40}" class="bus-line" />`;
+        }
+
+        let currentY = 70;
+        let ffX = 800;
+        
+        const drawAND = (x, y) => `
+            <path d="M ${x} ${y} v 30 h 15 a 15 15 0 0 0 0 -30 Z" class="gate" />
+            <text x="${x+8}" y="${y+19}" class="text-sm">AND</text>
+        `;
+        const drawOR = (x, y) => `
+            <path d="M ${x} ${y} q 10 15 0 30 h 10 q 20 -15 0 -30 Z" class="gate" />
+            <text x="${x+8}" y="${y+19}" class="text-sm">OR</text>
+        `;
+        let ffInputs = {};
+
+        for (let {pin, eq} of sortedEquations) {
+            let terms = eq.terms;
+            let andOutputs = [];
+            
+            if(eq.str === '0' || eq.str === '1') {
+                ffInputs[pin] = { type: 'const', val: eq.str };
+                continue;
+            }
+
+            terms.forEach(term => {
+                let y = currentY;
+                let andX = 350;
+                
+                if(term.length > 1) {
+                    svg += drawAND(andX, y);
+                    andOutputs.push({x: andX + 30, y: y + 15});
+                    
+                    term.forEach((v, idx) => {
+                        let busName = v.val ? v.var : v.var + "'";
+                        let bx = busX[busName];
+                        let tapY = y + 5 + (idx * 10);
+                        svg += `<circle cx="${bx}" cy="${tapY}" r="4" class="wire-dot"/>`;
+                        svg += `<path d="M ${bx} ${tapY} H ${andX}" class="wire" />`;
+                    });
+                } else if(term.length === 1) {
+                    let v = term[0];
+                    let busName = v.val ? v.var : v.var + "'";
+                    let bx = busX[busName];
+                    let tapY = y + 15;
+                    svg += `<circle cx="${bx}" cy="${tapY}" r="4" class="wire-dot"/>`;
+                    andOutputs.push({x: bx, y: tapY});
+                }
+                currentY += 45;
+            });
+            let orX = 550;
+            let orY = (andOutputs[0].y + andOutputs[andOutputs.length-1].y) / 2 - 15;
+            if(andOutputs.length > 1) {
+                svg += drawOR(orX, orY);
+                let collectorX = orX - 25;
+                let minY = andOutputs[0].y;
+                let maxY = andOutputs[andOutputs.length-1].y;
+                
+                svg += `<path d="M ${collectorX} ${minY} V ${maxY}" class="wire" />`;
+                
+                andOutputs.forEach(out => {
+                    svg += `<circle cx="${collectorX}" cy="${out.y}" r="3" class="wire-dot"/>`;
+                    svg += `<path d="M ${out.x} ${out.y} H ${collectorX}" class="wire" />`;
+                });
+                svg += `<path d="M ${collectorX} ${orY+15} H ${orX}" class="wire" />`;
+                ffInputs[pin] = { type: 'wire', y: orY + 15, x: orX + 30 };
+            } else {
+                ffInputs[pin] = { type: 'wire', y: andOutputs[0].y, x: andOutputs[0].x };
+            }
+            currentY += 25;
+        }
+
+        // 畫正反器與回授/時脈線
+        let drawFF = (id, qName, yOffset) => {
+            svg += `<rect x="${ffX}" y="${yOffset}" width="70" height="100" class="ff-box" />`;
+            svg += `<text x="${ffX+10}" y="${yOffset-10}" class="text-bold">${qName} (${ffType})</text>`;
+            // CLK 三角形輸入標記
+            svg += `<path d="M ${ffX} ${yOffset+70} L ${ffX+10} ${yOffset+75} L ${ffX} ${yOffset+80}" class="clk-wire" />`;
+            
+            // 內部標籤顯示完整編號
+            svg += `<text x="${ffX+40}" y="${yOffset+25}" class="text">${qName}</text>`;
+            svg += `<text x="${ffX+40}" y="${yOffset+75}" class="text">${qName}'</text>`;
+            
+            let bxQ = busX[qName];
+            let bxQinv = busX[qName+"'"];
+            
+            // 修正：將底部的綠色回授線分別抬升至 h-22 與 h-34，避開 h-10 的 CLK 紅線
+            let xOffsetQ = ffX + 85 + (id === '0' ? 0 : 20);
+            let xOffsetQinv = ffX + 115 + (id === '0' ? 0 : 20);
+            let returnTopY = (id === '0') ? 12 : 24;
+            let returnBotY = (id === '0') ? h - 22 : h - 34; // 這裡錯開了 Y 軸
+            
+            svg += `<path d="M ${ffX+70} ${yOffset+20} H ${xOffsetQ} V ${returnTopY} H ${bxQ} V 40" class="feedback-wire" />`;
+            svg += `<path d="M ${ffX+70} ${yOffset+70} H ${xOffsetQinv} V ${returnBotY} H ${bxQinv} V ${h-40}" class="feedback-wire" />`;
+            
+            svg += `<circle cx="${bxQ}" cy="40" r="4" class="feedback-dot"/>`;
+            svg += `<circle cx="${bxQinv}" cy="${h-40}" r="4" class="feedback-dot"/>`;
+            
+            // 修正：將接到 CLK 的垂直紅線稍微往右移 (ffX-15 / ffX-25)，避免和藍色的邏輯閘輸入線 (ffX-30) 重疊
+            let clkBranchX = ffX - 15 - (id === '0' ? 0 : 10);
+            svg += `<path d="M ${clkBranchX} ${clkMainY} V ${yOffset+75} H ${ffX}" class="clk-wire" />`;
+            svg += `<circle cx="${clkBranchX}" cy="${clkMainY}" r="3.5" style="fill:#ee5253;" />`;
+        };
+
+        // 修正：將全域時脈線 (CLK) 固定在畫面的最底下 h - 10 的高度
+        let clkMainY = h - 10;
+        svg += `<path d="M 40 ${clkMainY} H ${ffX + 10}" class="clk-wire" />`;
+        svg += `<text x="40" y="${clkMainY - 8}" class="text-bold" fill="#ee5253">CLK</text>`;
+
+        if(ffCount === 2) {
+            drawFF('0', 'Q0', 100);
+            drawFF('1', 'Q1', 280);
+        } else {
+            drawFF('0', 'Q0', 150);
+        }
+
+        const routeToPin = (pinName, targetX, targetY) => {
+            if(!ffInputs[pinName]) return;
+            let input = ffInputs[pinName];
+            svg += `<text x="${targetX+5}" y="${targetY+5}" class="text">${pinName}</text>`;
+            if(input.type === 'const') {
+                svg += `<text x="${targetX-20}" y="${targetY+5}" class="text-bold" fill="red">${input.val}</text>`;
+                svg += `<path d="M ${targetX-10} ${targetY} H ${targetX}" class="wire" />`;
+            } else {
+                svg += `<path d="M ${input.x} ${input.y} H ${targetX-30} V ${targetY} H ${targetX}" class="wire" />`;
+            }
+        };
+
+        if(ffCount === 2) {
+            if(ffType === 'D' || ffType === 'T') {
+                routeToPin(ffType+'0', ffX, 120);
+                routeToPin(ffType+'1', ffX, 300);
+            } else {
+                let p1 = ffType[0], p2 = ffType[1];
+                routeToPin(p1+'0', ffX, 120); routeToPin(p2+'0', ffX, 160);
+                routeToPin(p1+'1', ffX, 300); routeToPin(p2+'1', ffX, 340);
+            }
+        } else {
+            if(ffType === 'D' || ffType === 'T') {
+                routeToPin(ffType+'0', ffX, 170);
+            } else {
+                let p1 = ffType[0], p2 = ffType[1];
+                routeToPin(p1+'0', ffX, 170); routeToPin(p2+'0', ffX, 210);
+            }
+        }
+
+        if(ffInputs['Z']) {
+            let zIn = ffInputs['Z'];
+            svg += `<text x="910" y="${zIn.y+5}" class="text-bold">Z (Out)</text>`;
+            if(zIn.type === 'const') {
+                svg += `<text x="890" y="${zIn.y+5}" class="text-bold" fill="red">${zIn.val}</text>`;
+            } else {
+                svg += `<path d="M ${zIn.x} ${zIn.y} H 900" class="wire" />`;
+            }
+        }
+
+        svg += `</svg>`;
+        return svg;
+    }
+
+    function generateCircuit() {
+        const parsed = parseInput();
+        if(!parsed) { alert("請輸入有效的狀態表資料！"); return; }
+        
+        const { rawData, stateMap, ffCount } = parsed;
+        const ffType = document.querySelector('input[name="ff"]:checked').value;
+        const numVars = ffCount + 1; 
+        const varNames = ffCount === 2 ? ['Q1', 'Q0', 'X'] : ['Q0', 'X'];
+        const totalRows = Math.pow(2, numVars);
+        
+        document.getElementById('outputSection').classList.remove('hidden');
+        document.getElementById('stateAllocationInfo').innerHTML = 
+            `偵測到 <strong>${Object.keys(stateMap).length}</strong> 個狀態，自動配置 <strong>${ffCount}</strong> 個正反器。<br>
+             狀態編碼: ` + Object.entries(stateMap).map(([s,c]) => `${s}=${c}`).join(', ');
+        
+        let truthTable = Array(totalRows).fill().map(() => ({ nsQ: Array(ffCount).fill('X'), z: 'X' }));
+        rawData.forEach(row => {
+            if(stateMap[row.ps] && (row.x === '0' || row.x === '1')) {
+                let keyBin = stateMap[row.ps] + row.x;
+                let idx = parseInt(keyBin, 2);
+                if(stateMap[row.ns]) {
+                    truthTable[idx].nsQ = stateMap[row.ns].split('');
+                }
+                truthTable[idx].z = row.z;
+            }
+        });
+        
+        let pinsData = {};
+        let setupPins = (prefix, i) => {
+            if(ffType==='D' || ffType==='T') pinsData[ffType+i] = [];
+            else { pinsData[ffType[0]+i] = []; pinsData[ffType[1]+i] = []; }
+        };
+        if(ffCount === 2) { setupPins('1', 1); setupPins('0', 0); } 
+        else { setupPins('0', 0); }
+        pinsData['Z'] = [];
+        
+        truthTable.forEach((row, idx) => {
+            let keyBin = idx.toString(2).padStart(numVars, '0');
+            if(ffCount === 2) {
+                let ex1 = getExcitation(ffType, keyBin[0], row.nsQ[0]);
+                let ex0 = getExcitation(ffType, keyBin[1], row.nsQ[1]);
+                if(ffType==='D'||ffType==='T'){ pinsData[ffType+'1'].push(ex1.p1); pinsData[ffType+'0'].push(ex0.p1); }
+                else { pinsData[ffType[0]+'1'].push(ex1.p1); pinsData[ffType[1]+'1'].push(ex1.p2); 
+                       pinsData[ffType[0]+'0'].push(ex0.p1); pinsData[ffType[1]+'0'].push(ex0.p2); }
+            } else {
+                let ex0 = getExcitation(ffType, keyBin[0], row.nsQ[0]);
+                if(ffType==='D'||ffType==='T'){ pinsData[ffType+'0'].push(ex0.p1); }
+                else { pinsData[ffType[0]+'0'].push(ex0.p1); pinsData[ffType[1]+'0'].push(ex0.p2); }
+            }
+            pinsData['Z'].push(row.z);
+        });
+        
+        let sortedPinKeys = Object.keys(pinsData).sort((a, b) => {
+            if (a === 'Z') return 1;
+            if (b === 'Z') return -1;
+            let numA = parseInt(a.replace(/\D/g, '') || "0");
+            let numB = parseInt(b.replace(/\D/g, '') || "0");
+            if (numA !== numB) return numA - numB;
+            return a.localeCompare(b);
+        });
+        
+        const eqResult = document.getElementById('eqResult');
+        const kmapResult = document.getElementById('kmapResult');
+        eqResult.innerHTML = ''; kmapResult.innerHTML = '';
+        
+        let sortedEquations = [];
+        for (let pin of sortedPinKeys) {
+            let data = pinsData[pin];
+            let eq = solveLogic(data, numVars, varNames);
+            sortedEquations.push({ pin, eq });
+            eqResult.innerHTML += `<div class="eq-item">${pin} = <span style="color:#0056b3">${eq.str}</span></div>`;
+            kmapResult.innerHTML += ffCount === 2 ? createKMap3Var(pin, data) : createKMap2Var(pin, data);
+        }
+
+        document.getElementById('svgContainer').innerHTML = drawLogicCircuit(ffCount, ffType, sortedEquations);
+        document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    window.onload = initTable;
+</script>
+</body>
+</html>
