@@ -12,6 +12,10 @@
             --box-bg: #ffffff;
             --text-main: #333;
         }
+        /* 加入全域 box-sizing 確保寬度計算不會被 padding 撐破 */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #eef2f5;
@@ -21,7 +25,6 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            box-sizing: border-box;
         }
         header {
             background-color: #1a2a3a;
@@ -80,8 +83,7 @@
             border: 1px solid var(--border);
             padding: 4px;
         }
-        table.state-table th { background: #e9ecef;
-        }
+        table.state-table th { background: #e9ecef; }
         table.state-table input {
             width: 80%;
             text-align: center;
@@ -105,18 +107,12 @@
             min-width: 100px;
             transition: 0.2s;
         }
-        .btn-add { background: #28a745; color: white; flex-basis: 100%;
-        }
-        .btn-add:hover { background: #218838;
-        }
-        .btn-clear { background: #e0e0e0; color: #333;
-        }
-        .btn-clear:hover { background: #d0d0d0;
-        }
-        .btn-generate { background: var(--primary); color: white;
-        }
-        .btn-generate:hover { background: #004494;
-        }
+        .btn-add { background: #28a745; color: white; flex-basis: 100%; }
+        .btn-add:hover { background: #218838; }
+        .btn-clear { background: #e0e0e0; color: #333; }
+        .btn-clear:hover { background: #d0d0d0; }
+        .btn-generate { background: var(--primary); color: white; }
+        .btn-generate:hover { background: #004494; }
 
         /* 右側輸出區 */
         .main-content {
@@ -127,8 +123,7 @@
             flex-direction: column;
             gap: 20px;
         }
-        .hidden { display: none !important;
-        }
+        .hidden { display: none !important; }
         .output-box {
             border: 1px solid #4a90e2;
             border-radius: 6px;
@@ -141,8 +136,7 @@
             margin-bottom: 10px;
             font-size: 1rem;
         }
-        .info-text { font-size: 0.9rem; color: #555;
-        margin-bottom: 15px; }
+        .info-text { font-size: 0.9rem; color: #555; margin-bottom: 15px; }
         .equations-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -152,14 +146,35 @@
             background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px;
         }
         
-        .kmap-container { display: flex;
-            gap: 20px; flex-wrap: wrap; }
-        .kmap { border-collapse: collapse; text-align: center; margin-bottom: 10px;
-            background: #fff; }
-        .kmap th, .kmap td { border: 1px solid #999;
-            width: 40px; height: 40px; }
-        .kmap th { background: #eef; font-weight: normal;
-            font-size: 0.8rem;}
+        /* 卡諾圖專屬樣式 */
+        .kmap-container { display: flex; gap: 20px; flex-wrap: wrap; }
+        .kmap { border-collapse: collapse; text-align: center; margin-bottom: 10px; background: #fff; }
+        .kmap th, .kmap td { border: 1px solid #999; width: 40px; height: 40px; }
+        .kmap th { background: #eef; font-weight: normal; font-size: 0.85rem; }
+        
+        /* 完美對角線切割的左上角儲存格 */
+        .diagonal-cell {
+            position: relative;
+            background: linear-gradient(to top right, #eef 48.5%, #999 49.5%, #999 50.5%, #eef 51.5%);
+            min-width: 65px;
+            height: 40px;
+        }
+        .diagonal-cell .col-var {
+            position: absolute;
+            top: 3px;
+            right: 4px;
+            font-size: 0.75rem;
+            color: #333;
+            font-weight: bold;
+        }
+        .diagonal-cell .row-var {
+            position: absolute;
+            bottom: 3px;
+            left: 4px;
+            font-size: 0.75rem;
+            color: #333;
+            font-weight: bold;
+        }
         
         .svg-container {
             width: 100%;
@@ -169,7 +184,36 @@
             border-radius: 4px;
             padding: 10px 0;
         }
-        svg { min-width: 900px; height: 550px; display: block;
+        svg { min-width: 900px; height: 550px; display: block; }
+
+        /* ==================================================== */
+        /* 手機與平板專屬響應式設計 (Responsive Design)          */
+        /* ==================================================== */
+        @media screen and (max-width: 800px) {
+            body {
+                height: auto;       /* 解除高度限制，讓手機可以整頁自然滑動 */
+                padding: 10px;      /* 縮減螢幕邊緣的留白 */
+            }
+            .container {
+                flex-direction: column; /* 關鍵：把佈局從左右(Row)變成上下(Column) */
+                height: auto;
+            }
+            .sidebar {
+                width: 100%;        /* 讓輸入區佔滿整個螢幕寬度 */
+                border-right: none; /* 移除右邊的灰線 */
+                border-bottom: 2px solid var(--primary); /* 改在下方加一條線區隔 */
+                overflow-y: visible; /* 允許隨整頁滾動 */
+            }
+            .main-content {
+                width: 100%;        /* 讓輸出區佔滿整個螢幕寬度 */
+                padding: 15px 10px;
+                overflow-y: visible; /* 允許隨整頁滾動 */
+            }
+            /* 優化手機上的標題字體大小 */
+            header {
+                font-size: 1rem;
+                padding: 12px 15px;
+            }
         }
     </style>
 </head>
@@ -184,14 +228,14 @@
         <div class="panel" style="border-color: #e74c3c;">
             <div class="panel-title">1. 模型與正反器選擇</div>
             <div class="radio-group" style="margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                <label><input type="radio" name="model" value="Mealy" checked> Mealy</label>
-                <label><input type="radio" name="model" value="Moore"> Moore</label>
+                <label><input type="radio" name="model" value="Mealy"> Mealy</label>
+                <label><input type="radio" name="model" value="Moore" checked> Moore</label>
             </div>
             <div class="radio-group">
-                <label><input type="radio" name="ff" value="D"> D-FF</label>
+                <label><input type="radio" name="ff" value="D" checked> D-FF</label>
                 <label><input type="radio" name="ff" value="T"> T-FF</label>
                 <label><input type="radio" name="ff" value="SR"> SR-FF</label>
-                <label><input type="radio" name="ff" value="JK" checked> JK-FF</label>
+                <label><input type="radio" name="ff" value="JK"> JK-FF</label>
             </div>
         </div>
 
@@ -207,7 +251,7 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    </tbody>
+                </tbody>
             </table>
             <div class="btn-group">
                 <button class="btn-add" onclick="addRow()">+ 增加一行</button>
@@ -231,21 +275,24 @@
 
         <div class="output-box" style="border-color: #7ed321;">
             <div class="output-title">OUTPUT 3: 邏輯閘級電路圖 (Gate-Level Schematic)</div>
-            <div class="info-text">支援正交佈線 (Rectilinear Routing) 與獨立邏輯閘繪製</div>
+            <div class="info-text">支援正交佈線 (Rectilinear Routing) 與獨立邏輯閘繪製。若是手機觀看，該區域可左右滑動！</div>
             <div class="svg-container" id="svgContainer"></div>
          </div>
     </div>
 </div>
 
 <script>
+    // 預設代入圖片中的 Moore Machine 資料，方便測試
     const defaultData = [
         { ps: 'A', x: '0', ns: 'A', z: '0' }, { ps: 'A', x: '1', ns: 'B', z: '0' },
-        { ps: 'B', x: '0', ns: 'C', z: '1' }, { ps: 'B', x: '1', ns: 'A', z: '0' }
+        { ps: 'B', x: '0', ns: 'A', z: '0' }, { ps: 'B', x: '1', ns: 'C', z: '0' },
+        { ps: 'C', x: '0', ns: 'A', z: '0' }, { ps: 'C', x: '1', ns: 'D', z: '0' },
+        { ps: 'D', x: '0', ns: 'A', z: '1' }, { ps: 'D', x: '1', ns: 'D', z: '1' }
     ];
     function initTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < defaultData.length; i++) {
             appendRow(defaultData[i]);
         }
     }
@@ -332,7 +379,6 @@
         if(ones.length === 0) return { str: "0", terms: [] };
         if(ones.length + dcs.length === dataArray.length) return { str: "1", terms: [] };
 
-        let validImplicants = [];
         let formatStr = (val, mask) => {
             let res = [];
             for(let i=0; i<numVars; i++) {
@@ -344,6 +390,7 @@
             return res;
         };
 
+        let validImplicants = [];
         for(let mask=0; mask < (1<<numVars); mask++) {
             for(let val=0; val < (1<<numVars); val++) {
                 if((val & mask) !== 0) continue;
@@ -355,23 +402,57 @@
                     }
                 }
                 if(!coversZero && coveredOnes.length > 0) {
-                    validImplicants.push({ term: formatStr(val, mask), covers: coveredOnes, cost: numVars - mask.toString(2).split('1').length + 1 });
+                    validImplicants.push({
+                        term: formatStr(val, mask),
+                        covers: coveredOnes,
+                        cost: formatStr(val, mask).length
+                    });
                 }
             }
         }
 
-        validImplicants.sort((a,b) => a.cost - b.cost || b.covers.length - a.covers.length);
+        let primeImplicants = validImplicants.filter(a => {
+            return !validImplicants.some(b => {
+                if (a === b) return false;
+                return a.cost > b.cost && b.term.every(bv =>
+                    a.term.some(av => av.var === bv.var && av.val === bv.val)
+                );
+            });
+        });
+
         let selectedTerms = [];
         let uncovered = new Set(ones);
 
-        while(uncovered.size > 0) {
-            let best = null, bestCount = -1;
-            for(let imp of validImplicants) {
-                let count = imp.covers.filter(x => uncovered.has(x)).length;
-                if(count > bestCount) { bestCount = count; best = imp; }
+        let epis = new Set();
+        for (let minterm of uncovered) {
+            let coveringPIs = primeImplicants.filter(pi => pi.covers.includes(minterm));
+            if (coveringPIs.length === 1) {
+                epis.add(coveringPIs[0]);
             }
-            selectedTerms.push(best.term);
-            best.covers.forEach(x => uncovered.delete(x));
+        }
+
+        epis.forEach(epi => {
+            selectedTerms.push(epi.term);
+            epi.covers.forEach(x => uncovered.delete(x));
+        });
+
+        while(uncovered.size > 0) {
+            let best = null, bestCount = -1, bestCost = 999;
+            for(let pi of primeImplicants) {
+                let count = pi.covers.filter(x => uncovered.has(x)).length;
+                if(count === 0) continue;
+                if(count > bestCount || (count === bestCount && pi.cost < bestCost)) {
+                    bestCount = count;
+                    bestCost = pi.cost;
+                    best = pi;
+                }
+            }
+            if (best) {
+                selectedTerms.push(best.term);
+                best.covers.forEach(x => uncovered.delete(x));
+            } else {
+                break; 
+            }
         }
 
         let strArr = selectedTerms.map(t => {
@@ -384,7 +465,13 @@
     function createKMap2Var(title, data) {
         return `<div style="text-align:center;"><strong>${title}</strong>
             <table class="kmap" style="margin:5px auto;">
-                <tr><th>X \\ Q0</th><th>0</th><th>1</th></tr>
+                <tr>
+                    <th class="diagonal-cell" style="width: 50px;">
+                        <span class="col-var">Q1</span>
+                        <span class="row-var">X</span>
+                    </th>
+                    <th>0</th><th>1</th>
+                </tr>
                 <tr><th>0</th><td>${data[0]}</td><td>${data[2]}</td></tr>
                 <tr><th>1</th><td>${data[1]}</td><td>${data[3]}</td></tr>
             </table></div>`;
@@ -394,7 +481,13 @@
         let idx = [[0, 2, 6, 4], [1, 3, 7, 5]];
         return `<div style="text-align:center;"><strong>${title}</strong>
             <table class="kmap" style="margin:5px auto;">
-                <tr><th>X \\ Q1Q0</th><th>00</th><th>01</th><th>11</th><th>10</th></tr>
+                <tr>
+                    <th class="diagonal-cell" style="width: 65px;">
+                        <span class="col-var">Q1Q2</span>
+                        <span class="row-var">X</span>
+                    </th>
+                    <th>00</th><th>01</th><th>11</th><th>10</th>
+                </tr>
                 <tr><th>0</th><td>${data[idx[0][0]]}</td><td>${data[idx[0][1]]}</td><td>${data[idx[0][2]]}</td><td>${data[idx[0][3]]}</td></tr>
                 <tr><th>1</th><td>${data[idx[1][0]]}</td><td>${data[idx[1][1]]}</td><td>${data[idx[1][2]]}</td><td>${data[idx[1][3]]}</td></tr>
             </table></div>`;
@@ -419,8 +512,8 @@
             </style>
         `;
 
-        let busX = { 'X': 60, "X'": 90, 'Q0': 130, "Q0'": 160 };
-        if(ffCount === 2) { busX['Q1'] = 200; busX["Q1'"] = 230; }
+        let busX = { 'X': 60, "X'": 90, 'Q1': 130, "Q1'": 160 };
+        if(ffCount === 2) { busX['Q2'] = 200; busX["Q2'"] = 230; }
         
         for (let [name, x] of Object.entries(busX)) {
             svg += `<text x="${x-10}" y="30" class="text-bus">${name}</text>`;
@@ -496,25 +589,22 @@
             currentY += 25;
         }
 
-        // 畫正反器與回授/時脈線
         let drawFF = (id, qName, yOffset) => {
             svg += `<rect x="${ffX}" y="${yOffset}" width="70" height="100" class="ff-box" />`;
             svg += `<text x="${ffX+10}" y="${yOffset-10}" class="text-bold">${qName} (${ffType})</text>`;
-            // CLK 三角形輸入標記
             svg += `<path d="M ${ffX} ${yOffset+70} L ${ffX+10} ${yOffset+75} L ${ffX} ${yOffset+80}" class="clk-wire" />`;
             
-            // 內部標籤顯示完整編號
             svg += `<text x="${ffX+40}" y="${yOffset+25}" class="text">${qName}</text>`;
             svg += `<text x="${ffX+40}" y="${yOffset+75}" class="text">${qName}'</text>`;
             
             let bxQ = busX[qName];
             let bxQinv = busX[qName+"'"];
             
-            // 修正：將底部的綠色回授線分別抬升至 h-22 與 h-34，避開 h-10 的 CLK 紅線
-            let xOffsetQ = ffX + 85 + (id === '0' ? 0 : 20);
-            let xOffsetQinv = ffX + 115 + (id === '0' ? 0 : 20);
-            let returnTopY = (id === '0') ? 12 : 24;
-            let returnBotY = (id === '0') ? h - 22 : h - 34; // 這裡錯開了 Y 軸
+            let isFirst = (id === '1');
+            let xOffsetQ = ffX + 85 + (isFirst ? 0 : 20);
+            let xOffsetQinv = ffX + 115 + (isFirst ? 0 : 20);
+            let returnTopY = isFirst ? 12 : 24;
+            let returnBotY = isFirst ? h - 22 : h - 34; 
             
             svg += `<path d="M ${ffX+70} ${yOffset+20} H ${xOffsetQ} V ${returnTopY} H ${bxQ} V 40" class="feedback-wire" />`;
             svg += `<path d="M ${ffX+70} ${yOffset+70} H ${xOffsetQinv} V ${returnBotY} H ${bxQinv} V ${h-40}" class="feedback-wire" />`;
@@ -522,25 +612,23 @@
             svg += `<circle cx="${bxQ}" cy="40" r="4" class="feedback-dot"/>`;
             svg += `<circle cx="${bxQinv}" cy="${h-40}" r="4" class="feedback-dot"/>`;
             
-            // 修正：將接到 CLK 的垂直紅線稍微往右移 (ffX-15 / ffX-25)，避免和藍色的邏輯閘輸入線 (ffX-30) 重疊
-            let clkBranchX = ffX - 15 - (id === '0' ? 0 : 10);
+            let clkBranchX = ffX - 15 - (isFirst ? 0 : 10);
             svg += `<path d="M ${clkBranchX} ${clkMainY} V ${yOffset+75} H ${ffX}" class="clk-wire" />`;
             svg += `<circle cx="${clkBranchX}" cy="${clkMainY}" r="3.5" style="fill:#ee5253;" />`;
         };
 
-        // 修正：將全域時脈線 (CLK) 固定在畫面的最底下 h - 10 的高度
         let clkMainY = h - 10;
         svg += `<path d="M 40 ${clkMainY} H ${ffX + 10}" class="clk-wire" />`;
         svg += `<text x="40" y="${clkMainY - 8}" class="text-bold" fill="#ee5253">CLK</text>`;
 
         if(ffCount === 2) {
-            drawFF('0', 'Q0', 100);
-            drawFF('1', 'Q1', 280);
+            drawFF('1', 'Q1', 100);
+            drawFF('2', 'Q2', 280);
         } else {
-            drawFF('0', 'Q0', 150);
+            drawFF('1', 'Q1', 150);
         }
 
-        const routeToPin = (pinName, targetX, targetY) => {
+        const routeToPin = (pinName, targetX, targetY, dropOffset) => {
             if(!ffInputs[pinName]) return;
             let input = ffInputs[pinName];
             svg += `<text x="${targetX+5}" y="${targetY+5}" class="text">${pinName}</text>`;
@@ -548,35 +636,37 @@
                 svg += `<text x="${targetX-20}" y="${targetY+5}" class="text-bold" fill="red">${input.val}</text>`;
                 svg += `<path d="M ${targetX-10} ${targetY} H ${targetX}" class="wire" />`;
             } else {
-                svg += `<path d="M ${input.x} ${input.y} H ${targetX-30} V ${targetY} H ${targetX}" class="wire" />`;
+                let dropX = targetX - dropOffset; 
+                svg += `<path d="M ${input.x} ${input.y} H ${dropX} V ${targetY} H ${targetX}" class="wire" />`;
             }
         };
 
         if(ffCount === 2) {
             if(ffType === 'D' || ffType === 'T') {
-                routeToPin(ffType+'0', ffX, 120);
-                routeToPin(ffType+'1', ffX, 300);
+                routeToPin(ffType+'1', ffX, 120, 30);
+                routeToPin(ffType+'2', ffX, 300, 45);
             } else {
                 let p1 = ffType[0], p2 = ffType[1];
-                routeToPin(p1+'0', ffX, 120); routeToPin(p2+'0', ffX, 160);
-                routeToPin(p1+'1', ffX, 300); routeToPin(p2+'1', ffX, 340);
+                routeToPin(p1+'1', ffX, 120, 30); routeToPin(p2+'1', ffX, 160, 45);
+                routeToPin(p1+'2', ffX, 300, 60); routeToPin(p2+'2', ffX, 340, 75);
             }
         } else {
             if(ffType === 'D' || ffType === 'T') {
-                routeToPin(ffType+'0', ffX, 170);
+                routeToPin(ffType+'1', ffX, 170, 30);
             } else {
                 let p1 = ffType[0], p2 = ffType[1];
-                routeToPin(p1+'0', ffX, 170); routeToPin(p2+'0', ffX, 210);
+                routeToPin(p1+'1', ffX, 170, 30); routeToPin(p2+'1', ffX, 210, 45);
             }
         }
 
         if(ffInputs['Z']) {
             let zIn = ffInputs['Z'];
-            svg += `<text x="910" y="${zIn.y+5}" class="text-bold">Z (Out)</text>`;
+            let zRouteY = h - 60;
+            svg += `<text x="910" y="${zRouteY+5}" class="text-bold">Z (Out)</text>`;
             if(zIn.type === 'const') {
-                svg += `<text x="890" y="${zIn.y+5}" class="text-bold" fill="red">${zIn.val}</text>`;
+                svg += `<text x="890" y="${zRouteY+5}" class="text-bold" fill="red">${zIn.val}</text>`;
             } else {
-                svg += `<path d="M ${zIn.x} ${zIn.y} H 900" class="wire" />`;
+                svg += `<path d="M ${zIn.x} ${zIn.y} H 710 V ${zRouteY} H 900" class="wire" />`;
             }
         }
 
@@ -591,7 +681,8 @@
         const { rawData, stateMap, ffCount } = parsed;
         const ffType = document.querySelector('input[name="ff"]:checked').value;
         const numVars = ffCount + 1; 
-        const varNames = ffCount === 2 ? ['Q1', 'Q0', 'X'] : ['Q0', 'X'];
+        
+        const varNames = ffCount === 2 ? ['Q1', 'Q2', 'X'] : ['Q1', 'X'];
         const totalRows = Math.pow(2, numVars);
         
         document.getElementById('outputSection').classList.remove('hidden');
@@ -612,26 +703,26 @@
         });
         
         let pinsData = {};
-        let setupPins = (prefix, i) => {
-            if(ffType==='D' || ffType==='T') pinsData[ffType+i] = [];
-            else { pinsData[ffType[0]+i] = []; pinsData[ffType[1]+i] = []; }
+        let setupPins = (prefix) => {
+            if(ffType==='D' || ffType==='T') pinsData[ffType+prefix] = [];
+            else { pinsData[ffType[0]+prefix] = []; pinsData[ffType[1]+prefix] = []; }
         };
-        if(ffCount === 2) { setupPins('1', 1); setupPins('0', 0); } 
-        else { setupPins('0', 0); }
+        if(ffCount === 2) { setupPins('1'); setupPins('2'); } 
+        else { setupPins('1'); }
         pinsData['Z'] = [];
         
         truthTable.forEach((row, idx) => {
             let keyBin = idx.toString(2).padStart(numVars, '0');
             if(ffCount === 2) {
                 let ex1 = getExcitation(ffType, keyBin[0], row.nsQ[0]);
-                let ex0 = getExcitation(ffType, keyBin[1], row.nsQ[1]);
-                if(ffType==='D'||ffType==='T'){ pinsData[ffType+'1'].push(ex1.p1); pinsData[ffType+'0'].push(ex0.p1); }
+                let ex2 = getExcitation(ffType, keyBin[1], row.nsQ[1]);
+                if(ffType==='D'||ffType==='T'){ pinsData[ffType+'1'].push(ex1.p1); pinsData[ffType+'2'].push(ex2.p1); }
                 else { pinsData[ffType[0]+'1'].push(ex1.p1); pinsData[ffType[1]+'1'].push(ex1.p2); 
-                       pinsData[ffType[0]+'0'].push(ex0.p1); pinsData[ffType[1]+'0'].push(ex0.p2); }
+                       pinsData[ffType[0]+'2'].push(ex2.p1); pinsData[ffType[1]+'2'].push(ex2.p2); }
             } else {
-                let ex0 = getExcitation(ffType, keyBin[0], row.nsQ[0]);
-                if(ffType==='D'||ffType==='T'){ pinsData[ffType+'0'].push(ex0.p1); }
-                else { pinsData[ffType[0]+'0'].push(ex0.p1); pinsData[ffType[1]+'0'].push(ex0.p2); }
+                let ex1 = getExcitation(ffType, keyBin[0], row.nsQ[0]);
+                if(ffType==='D'||ffType==='T'){ pinsData[ffType+'1'].push(ex1.p1); }
+                else { pinsData[ffType[0]+'1'].push(ex1.p1); pinsData[ffType[1]+'1'].push(ex1.p2); }
             }
             pinsData['Z'].push(row.z);
         });
@@ -659,7 +750,11 @@
         }
 
         document.getElementById('svgContainer').innerHTML = drawLogicCircuit(ffCount, ffType, sortedEquations);
-        document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        
+        // 為了在手機版體驗更好，算完後把畫面自動滾動到輸出區的頂部
+        setTimeout(() => {
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
     }
 
     window.onload = initTable;
