@@ -12,10 +12,7 @@
             --box-bg: #ffffff;
             --text-main: #333;
         }
-        /* 加入全域 box-sizing 確保寬度計算不會被 padding 撐破 */
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
+        *, *::before, *::after { box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #eef2f5;
@@ -151,30 +148,14 @@
         .kmap { border-collapse: collapse; text-align: center; margin-bottom: 10px; background: #fff; }
         .kmap th, .kmap td { border: 1px solid #999; width: 40px; height: 40px; }
         .kmap th { background: #eef; font-weight: normal; font-size: 0.85rem; }
-        
-        /* 完美對角線切割的左上角儲存格 */
         .diagonal-cell {
             position: relative;
             background: linear-gradient(to top right, #eef 48.5%, #999 49.5%, #999 50.5%, #eef 51.5%);
             min-width: 65px;
             height: 40px;
         }
-        .diagonal-cell .col-var {
-            position: absolute;
-            top: 3px;
-            right: 4px;
-            font-size: 0.75rem;
-            color: #333;
-            font-weight: bold;
-        }
-        .diagonal-cell .row-var {
-            position: absolute;
-            bottom: 3px;
-            left: 4px;
-            font-size: 0.75rem;
-            color: #333;
-            font-weight: bold;
-        }
+        .diagonal-cell .col-var { position: absolute; top: 3px; right: 4px; font-size: 0.75rem; color: #333; font-weight: bold; }
+        .diagonal-cell .row-var { position: absolute; bottom: 3px; left: 4px; font-size: 0.75rem; color: #333; font-weight: bold; }
         
         .svg-container {
             width: 100%;
@@ -184,36 +165,14 @@
             border-radius: 4px;
             padding: 10px 0;
         }
-        svg { min-width: 900px; height: 550px; display: block; }
+        svg { min-width: 1200px; height: 750px; display: block; }
 
-        /* ==================================================== */
-        /* 手機與平板專屬響應式設計 (Responsive Design)          */
-        /* ==================================================== */
         @media screen and (max-width: 800px) {
-            body {
-                height: auto;       /* 解除高度限制，讓手機可以整頁自然滑動 */
-                padding: 10px;      /* 縮減螢幕邊緣的留白 */
-            }
-            .container {
-                flex-direction: column; /* 關鍵：把佈局從左右(Row)變成上下(Column) */
-                height: auto;
-            }
-            .sidebar {
-                width: 100%;        /* 讓輸入區佔滿整個螢幕寬度 */
-                border-right: none; /* 移除右邊的灰線 */
-                border-bottom: 2px solid var(--primary); /* 改在下方加一條線區隔 */
-                overflow-y: visible; /* 允許隨整頁滾動 */
-            }
-            .main-content {
-                width: 100%;        /* 讓輸出區佔滿整個螢幕寬度 */
-                padding: 15px 10px;
-                overflow-y: visible; /* 允許隨整頁滾動 */
-            }
-            /* 優化手機上的標題字體大小 */
-            header {
-                font-size: 1rem;
-                padding: 12px 15px;
-            }
+            body { height: auto; padding: 10px; }
+            .container { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 2px solid var(--primary); overflow-y: visible; }
+            .main-content { width: 100%; padding: 15px 10px; overflow-y: visible; }
+            header { font-size: 1rem; padding: 12px 15px; }
         }
     </style>
 </head>
@@ -275,19 +234,24 @@
 
         <div class="output-box" style="border-color: #7ed321;">
             <div class="output-title">OUTPUT 3: 邏輯閘級電路圖 (Gate-Level Schematic)</div>
-            <div class="info-text">支援正交佈線 (Rectilinear Routing) 與獨立邏輯閘繪製。若是手機觀看，該區域可左右滑動！</div>
+            <div class="info-text">支援最高 3 個正反器的正交佈線，若是手機觀看，該區域可左右滑動！</div>
             <div class="svg-container" id="svgContainer"></div>
-         </div>
+        </div>
+
+        <div class="output-box" style="border-color: #9b59b6;">
+            <div class="output-title">OUTPUT 4: 狀態轉移圖 (State Diagram)</div>
+            <div class="info-text">根據所選模型動態生成的狀態轉移圖。自動環狀排版，支援自我迴圈與彎曲箭頭。</div>
+            <div class="svg-container" id="stateDiagramContainer" style="background-color: #fafbfc;"></div>
+        </div>
     </div>
 </div>
 
 <script>
-    // 預設代入圖片中的 Moore Machine 資料，方便測試
     const defaultData = [
-        { ps: 'A', x: '0', ns: 'A', z: '0' }, { ps: 'A', x: '1', ns: 'B', z: '0' },
-        { ps: 'B', x: '0', ns: 'A', z: '0' }, { ps: 'B', x: '1', ns: 'C', z: '0' },
-        { ps: 'C', x: '0', ns: 'A', z: '0' }, { ps: 'C', x: '1', ns: 'D', z: '0' },
-        { ps: 'D', x: '0', ns: 'A', z: '1' }, { ps: 'D', x: '1', ns: 'D', z: '1' }
+        { ps: 'A', x: '0', ns: 'B', z: '0' }, { ps: 'A', x: '1', ns: 'D', z: '0' },
+        { ps: 'B', x: '0', ns: 'A', z: '1' }, { ps: 'B', x: '1', ns: 'C', z: '1' },
+        { ps: 'C', x: '0', ns: 'C', z: '1' }, { ps: 'C', x: '1', ns: 'B', z: '1' },
+        { ps: 'D', x: '0', ns: 'D', z: '1' }, { ps: 'D', x: '1', ns: 'C', z: '1' }
     ];
     function initTable() {
         const tbody = document.getElementById('tableBody');
@@ -343,10 +307,10 @@
         
         rows.forEach(row => {
             const inputs = row.querySelectorAll('input');
-            const ps = inputs[0].value.toUpperCase();
-            const x = inputs[1].value;
-            const ns = inputs[2].value.toUpperCase();
-            const z = inputs[3].value;
+            const ps = inputs[0].value.trim().toUpperCase();
+            const x = inputs[1].value.trim();
+            const ns = inputs[2].value.trim().toUpperCase();
+            const z = inputs[3].value.trim();
             if (ps && x) {
                 statesSet.add(ps);
                 if(ns) statesSet.add(ns);
@@ -356,16 +320,17 @@
         let states = Array.from(statesSet).sort();
         if(states.length === 0) return null;
         
-        let ffCount = states.length > 2 ? 2 : 1;
-        if(states.length > 4) {
-            alert("網頁版目前最多支援 4 個狀態 (2 個正反器)，多餘狀態將被忽略。");
-            states = states.slice(0, 4);
-            ffCount = 2;
+        let ffCount = states.length > 4 ? 3 : (states.length > 2 ? 2 : 1);
+        
+        if(states.length > 8) {
+            alert("網頁版目前最多支援 8 個狀態 (3 個正反器)，多餘狀態將被忽略。");
+            states = states.slice(0, 8);
+            ffCount = 3;
         }
 
         let stateMap = {};
         states.forEach((s, i) => {
-            stateMap[s] = ffCount === 1 ? i.toString(2) : i.toString(2).padStart(2, '0');
+            stateMap[s] = i.toString(2).padStart(ffCount, '0');
         });
         return { rawData, stateMap, ffCount };
     }
@@ -402,11 +367,7 @@
                     }
                 }
                 if(!coversZero && coveredOnes.length > 0) {
-                    validImplicants.push({
-                        term: formatStr(val, mask),
-                        covers: coveredOnes,
-                        cost: formatStr(val, mask).length
-                    });
+                    validImplicants.push({ term: formatStr(val, mask), covers: coveredOnes, cost: formatStr(val, mask).length });
                 }
             }
         }
@@ -426,9 +387,7 @@
         let epis = new Set();
         for (let minterm of uncovered) {
             let coveringPIs = primeImplicants.filter(pi => pi.covers.includes(minterm));
-            if (coveringPIs.length === 1) {
-                epis.add(coveringPIs[0]);
-            }
+            if (coveringPIs.length === 1) { epis.add(coveringPIs[0]); }
         }
 
         epis.forEach(epi => {
@@ -442,17 +401,13 @@
                 let count = pi.covers.filter(x => uncovered.has(x)).length;
                 if(count === 0) continue;
                 if(count > bestCount || (count === bestCount && pi.cost < bestCost)) {
-                    bestCount = count;
-                    bestCost = pi.cost;
-                    best = pi;
+                    bestCount = count; bestCost = pi.cost; best = pi;
                 }
             }
             if (best) {
                 selectedTerms.push(best.term);
                 best.covers.forEach(x => uncovered.delete(x));
-            } else {
-                break; 
-            }
+            } else { break; }
         }
 
         let strArr = selectedTerms.map(t => {
@@ -465,13 +420,7 @@
     function createKMap2Var(title, data) {
         return `<div style="text-align:center;"><strong>${title}</strong>
             <table class="kmap" style="margin:5px auto;">
-                <tr>
-                    <th class="diagonal-cell" style="width: 50px;">
-                        <span class="col-var">Q1</span>
-                        <span class="row-var">X</span>
-                    </th>
-                    <th>0</th><th>1</th>
-                </tr>
+                <tr><th class="diagonal-cell" style="width: 50px;"><span class="col-var">Q1</span><span class="row-var">X</span></th><th>0</th><th>1</th></tr>
                 <tr><th>0</th><td>${data[0]}</td><td>${data[2]}</td></tr>
                 <tr><th>1</th><td>${data[1]}</td><td>${data[3]}</td></tr>
             </table></div>`;
@@ -481,20 +430,37 @@
         let idx = [[0, 2, 6, 4], [1, 3, 7, 5]];
         return `<div style="text-align:center;"><strong>${title}</strong>
             <table class="kmap" style="margin:5px auto;">
-                <tr>
-                    <th class="diagonal-cell" style="width: 65px;">
-                        <span class="col-var">Q1Q2</span>
-                        <span class="row-var">X</span>
-                    </th>
-                    <th>00</th><th>01</th><th>11</th><th>10</th>
-                </tr>
+                <tr><th class="diagonal-cell" style="width: 65px;"><span class="col-var">Q1Q2</span><span class="row-var">X</span></th><th>00</th><th>01</th><th>11</th><th>10</th></tr>
                 <tr><th>0</th><td>${data[idx[0][0]]}</td><td>${data[idx[0][1]]}</td><td>${data[idx[0][2]]}</td><td>${data[idx[0][3]]}</td></tr>
                 <tr><th>1</th><td>${data[idx[1][0]]}</td><td>${data[idx[1][1]]}</td><td>${data[idx[1][2]]}</td><td>${data[idx[1][3]]}</td></tr>
             </table></div>`;
     }
 
+    function createKMap4Var(title, data) {
+        let idx = [
+            [0, 1, 3, 2],
+            [4, 5, 7, 6],
+            [12, 13, 15, 14],
+            [8, 9, 11, 10]
+        ];
+        return `<div style="text-align:center;"><strong>${title}</strong>
+            <table class="kmap" style="margin:5px auto;">
+                <tr>
+                    <th class="diagonal-cell" style="width: 80px;">
+                        <span class="col-var">Q3X</span>
+                        <span class="row-var">Q1Q2</span>
+                    </th>
+                    <th>00</th><th>01</th><th>11</th><th>10</th>
+                </tr>
+                <tr><th>00</th><td>${data[idx[0][0]]}</td><td>${data[idx[0][1]]}</td><td>${data[idx[0][2]]}</td><td>${data[idx[0][3]]}</td></tr>
+                <tr><th>01</th><td>${data[idx[1][0]]}</td><td>${data[idx[1][1]]}</td><td>${data[idx[1][2]]}</td><td>${data[idx[1][3]]}</td></tr>
+                <tr><th>11</th><td>${data[idx[2][0]]}</td><td>${data[idx[2][1]]}</td><td>${data[idx[2][2]]}</td><td>${data[idx[2][3]]}</td></tr>
+                <tr><th>10</th><td>${data[idx[3][0]]}</td><td>${data[idx[3][1]]}</td><td>${data[idx[3][2]]}</td><td>${data[idx[3][3]]}</td></tr>
+            </table></div>`;
+    }
+
     function drawLogicCircuit(ffCount, ffType, sortedEquations) {
-        let w = 1000, h = 550;
+        let w = 1200, h = 750;
         let svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
             <style>
                 .wire { stroke: #0984e3; stroke-width: 2.5; fill: none; stroke-linejoin: round; }
@@ -513,7 +479,8 @@
         `;
 
         let busX = { 'X': 60, "X'": 90, 'Q1': 130, "Q1'": 160 };
-        if(ffCount === 2) { busX['Q2'] = 200; busX["Q2'"] = 230; }
+        if(ffCount >= 2) { busX['Q2'] = 200; busX["Q2'"] = 230; }
+        if(ffCount === 3) { busX['Q3'] = 270; busX["Q3'"] = 300; }
         
         for (let [name, x] of Object.entries(busX)) {
             svg += `<text x="${x-10}" y="30" class="text-bus">${name}</text>`;
@@ -521,16 +488,15 @@
         }
 
         let currentY = 70;
-        let ffX = 800;
+        let ffX = 950;
         
         const drawAND = (x, y) => `
             <path d="M ${x} ${y} v 30 h 15 a 15 15 0 0 0 0 -30 Z" class="gate" />
-            <text x="${x+8}" y="${y+19}" class="text-sm">AND</text>
-        `;
+            <text x="${x+8}" y="${y+19}" class="text-sm">AND</text>`;
         const drawOR = (x, y) => `
             <path d="M ${x} ${y} q 10 15 0 30 h 10 q 20 -15 0 -30 Z" class="gate" />
-            <text x="${x+8}" y="${y+19}" class="text-sm">OR</text>
-        `;
+            <text x="${x+8}" y="${y+19}" class="text-sm">OR</text>`;
+        
         let ffInputs = {};
 
         for (let {pin, eq} of sortedEquations) {
@@ -544,12 +510,11 @@
 
             terms.forEach(term => {
                 let y = currentY;
-                let andX = 350;
+                let andX = 420;
                 
                 if(term.length > 1) {
                     svg += drawAND(andX, y);
                     andOutputs.push({x: andX + 30, y: y + 15});
-                    
                     term.forEach((v, idx) => {
                         let busName = v.val ? v.var : v.var + "'";
                         let bx = busX[busName];
@@ -567,7 +532,8 @@
                 }
                 currentY += 45;
             });
-            let orX = 550;
+            
+            let orX = 650;
             let orY = (andOutputs[0].y + andOutputs[andOutputs.length-1].y) / 2 - 15;
             if(andOutputs.length > 1) {
                 svg += drawOR(orX, orY);
@@ -576,7 +542,6 @@
                 let maxY = andOutputs[andOutputs.length-1].y;
                 
                 svg += `<path d="M ${collectorX} ${minY} V ${maxY}" class="wire" />`;
-                
                 andOutputs.forEach(out => {
                     svg += `<circle cx="${collectorX}" cy="${out.y}" r="3" class="wire-dot"/>`;
                     svg += `<path d="M ${out.x} ${out.y} H ${collectorX}" class="wire" />`;
@@ -600,11 +565,12 @@
             let bxQ = busX[qName];
             let bxQinv = busX[qName+"'"];
             
-            let isFirst = (id === '1');
-            let xOffsetQ = ffX + 85 + (isFirst ? 0 : 20);
-            let xOffsetQinv = ffX + 115 + (isFirst ? 0 : 20);
-            let returnTopY = isFirst ? 12 : 24;
-            let returnBotY = isFirst ? h - 22 : h - 34; 
+            let idx = parseInt(id) - 1; 
+            
+            let xOffsetQ = ffX + 80 + (idx * 20);
+            let xOffsetQinv = ffX + 140 + (idx * 20);
+            let returnTopY = 12 + (idx * 12);
+            let returnBotY = h - 22 - (idx * 12); 
             
             svg += `<path d="M ${ffX+70} ${yOffset+20} H ${xOffsetQ} V ${returnTopY} H ${bxQ} V 40" class="feedback-wire" />`;
             svg += `<path d="M ${ffX+70} ${yOffset+70} H ${xOffsetQinv} V ${returnBotY} H ${bxQinv} V ${h-40}" class="feedback-wire" />`;
@@ -612,7 +578,7 @@
             svg += `<circle cx="${bxQ}" cy="40" r="4" class="feedback-dot"/>`;
             svg += `<circle cx="${bxQinv}" cy="${h-40}" r="4" class="feedback-dot"/>`;
             
-            let clkBranchX = ffX - 15 - (isFirst ? 0 : 10);
+            let clkBranchX = ffX - 15 - (idx * 10);
             svg += `<path d="M ${clkBranchX} ${clkMainY} V ${yOffset+75} H ${ffX}" class="clk-wire" />`;
             svg += `<circle cx="${clkBranchX}" cy="${clkMainY}" r="3.5" style="fill:#ee5253;" />`;
         };
@@ -621,11 +587,15 @@
         svg += `<path d="M 40 ${clkMainY} H ${ffX + 10}" class="clk-wire" />`;
         svg += `<text x="40" y="${clkMainY - 8}" class="text-bold" fill="#ee5253">CLK</text>`;
 
-        if(ffCount === 2) {
-            drawFF('1', 'Q1', 100);
+        if(ffCount === 3) {
+            drawFF('1', 'Q1', 80);
             drawFF('2', 'Q2', 280);
-        } else {
+            drawFF('3', 'Q3', 480);
+        } else if(ffCount === 2) {
             drawFF('1', 'Q1', 150);
+            drawFF('2', 'Q2', 350);
+        } else {
+            drawFF('1', 'Q1', 250);
         }
 
         const routeToPin = (pinName, targetX, targetY, dropOffset) => {
@@ -641,120 +611,276 @@
             }
         };
 
-        if(ffCount === 2) {
+        if(ffCount === 3) {
             if(ffType === 'D' || ffType === 'T') {
-                routeToPin(ffType+'1', ffX, 120, 30);
+                routeToPin(ffType+'1', ffX, 100, 30);
                 routeToPin(ffType+'2', ffX, 300, 45);
+                routeToPin(ffType+'3', ffX, 500, 60);
             } else {
                 let p1 = ffType[0], p2 = ffType[1];
-                routeToPin(p1+'1', ffX, 120, 30); routeToPin(p2+'1', ffX, 160, 45);
+                routeToPin(p1+'1', ffX, 100, 30); routeToPin(p2+'1', ffX, 140, 45);
                 routeToPin(p1+'2', ffX, 300, 60); routeToPin(p2+'2', ffX, 340, 75);
+                routeToPin(p1+'3', ffX, 500, 90); routeToPin(p2+'3', ffX, 540, 105);
             }
-        } else {
+        } else if(ffCount === 2) {
             if(ffType === 'D' || ffType === 'T') {
                 routeToPin(ffType+'1', ffX, 170, 30);
+                routeToPin(ffType+'2', ffX, 370, 45);
             } else {
                 let p1 = ffType[0], p2 = ffType[1];
                 routeToPin(p1+'1', ffX, 170, 30); routeToPin(p2+'1', ffX, 210, 45);
+                routeToPin(p1+'2', ffX, 370, 60); routeToPin(p2+'2', ffX, 410, 75);
+            }
+        } else {
+            if(ffType === 'D' || ffType === 'T') {
+                routeToPin(ffType+'1', ffX, 270, 30);
+            } else {
+                let p1 = ffType[0], p2 = ffType[1];
+                routeToPin(p1+'1', ffX, 270, 30); routeToPin(p2+'1', ffX, 310, 45);
             }
         }
 
         if(ffInputs['Z']) {
             let zIn = ffInputs['Z'];
-            let zRouteY = h - 60;
-            svg += `<text x="910" y="${zRouteY+5}" class="text-bold">Z (Out)</text>`;
+            let zRouteY = h - 60; 
+            svg += `<text x="1130" y="${zRouteY+5}" class="text-bold">Z (Out)</text>`;
             if(zIn.type === 'const') {
-                svg += `<text x="890" y="${zRouteY+5}" class="text-bold" fill="red">${zIn.val}</text>`;
+                svg += `<text x="1110" y="${zRouteY+5}" class="text-bold" fill="red">${zIn.val}</text>`;
             } else {
-                svg += `<path d="M ${zIn.x} ${zIn.y} H 710 V ${zRouteY} H 900" class="wire" />`;
+                svg += `<path d="M ${zIn.x} ${zIn.y} H 780 V ${zRouteY} H 1120" class="wire" />`;
             }
         }
+        svg += `</svg>`;
+        return svg;
+    }
+
+    // ==========================================
+    // 🎨 狀態圖修正：加大畫布、平移中心點避免頂部裁切
+    // ==========================================
+    function drawStateDiagram(rawData, stateMap, model) {
+        // [修正點 1] 將畫布寬高加大至 1000x800，確保有充足的邊界空間
+        let w = 1000, h = 800; 
+        let svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9.5" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#2d3436" />
+                </marker>
+            </defs>
+            <style>
+                .st-node { fill: #ffffff; stroke: #9b59b6; stroke-width: 3; }
+                .st-text { font-family: 'Segoe UI', sans-serif; font-size: 18px; font-weight: bold; fill: #2d3436; text-anchor: middle; dominant-baseline: middle; }
+                .st-edge { fill: none; stroke: #2d3436; stroke-width: 2.5; }
+                .st-label { font-family: monospace; font-size: 15px; fill: #c0392b; font-weight: bold; text-anchor: middle; dominant-baseline: middle; }
+                .st-label-bg { fill: rgba(255, 255, 255, 0.9); rx: 4px; }
+            </style>
+        `;
+
+        let states = Object.keys(stateMap).sort();
+        let positions = {};
+        let r = 45; 
+
+        // [修正點 2] 將中心座標 (cx, cy) 往下移到 400，半徑調至 240
+        // 這樣最上面的圓圈 y 座標大約會在 160 的位置，自我迴圈的弧線只會凸到 40 左右，不會變成負數被切掉。
+        let cx = 500, cy = 400, radius = 240;
+        states.forEach((s, idx) => {
+            let angle = (Math.PI * 2 * idx) / states.length - Math.PI / 2;
+            positions[s] = {
+                x: cx + radius * Math.cos(angle),
+                y: cy + radius * Math.sin(angle)
+            };
+        });
+
+        let mooreOutput = {};
+        if (model === 'Moore') {
+            states.forEach(st => mooreOutput[st] = 'X');
+            rawData.forEach(row => {
+                if (row.z !== 'X' && row.z !== '' && mooreOutput[row.ps] === 'X') {
+                    mooreOutput[row.ps] = row.z;
+                }
+            });
+        }
+
+        let edges = {}; 
+        rawData.forEach(row => {
+            if (!row.ns || row.ns === 'X' || !stateMap[row.ns]) return;
+            let key = `${row.ps}->${row.ns}`;
+            if (!edges[key]) edges[key] = [];
+            edges[key].push({ x: row.x, z: row.z });
+        });
+
+        for (let key in edges) {
+            let [from, to] = key.split('->');
+            let p1 = positions[from];
+            let p2 = positions[to];
+            let trans = edges[key];
+
+            let labelText = trans.map(t => model === 'Mealy' ? `${t.x}/${t.z}` : `${t.x}`).join(', ');
+            let textWidth = labelText.length * 9.5; 
+
+            if (from === to) { 
+                let angle = Math.atan2(p1.y - cy, p1.x - cx);
+                let loopOffset = 25;
+                let startX = p1.x + r * Math.cos(angle - 0.5);
+                let startY = p1.y + r * Math.sin(angle - 0.5);
+                let endX = p1.x + r * Math.cos(angle + 0.5);
+                let endY = p1.y + r * Math.sin(angle + 0.5);
+                let ctrlX = p1.x + 120 * Math.cos(angle);
+                let ctrlY = p1.y + 120 * Math.sin(angle);
+
+                svg += `<path d="M ${startX} ${startY} Q ${ctrlX} ${ctrlY} ${endX} ${endY}" class="st-edge" marker-end="url(#arrowhead)" />`;
+                
+                let midX = p1.x + 85 * Math.cos(angle);
+                let midY = p1.y + 85 * Math.sin(angle);
+                svg += `<rect x="${midX - textWidth/2 - 4}" y="${midY - 12}" width="${textWidth + 8}" height="24" class="st-label-bg" />`;
+                svg += `<text x="${midX}" y="${midY + 2}" class="st-label">${labelText}</text>`;
+            } else { 
+                let dx = p2.x - p1.x; let dy = p2.y - p1.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                let nx = -dy / dist; let ny = dx / dist;
+
+                let offset = 40; 
+                let ctrlX = (p1.x + p2.x) / 2 + nx * offset;
+                let ctrlY = (p1.y + p2.y) / 2 + ny * offset;
+
+                let startDx = p1.x - ctrlX; let startDy = p1.y - ctrlY;
+                let startDist = Math.sqrt(startDx * startDx + startDy * startDy);
+                let startX = p1.x - (startDx / startDist) * r;
+                let startY = p1.y - (startDy / startDist) * r;
+
+                let endDx = p2.x - ctrlX; let endDy = p2.y - ctrlY;
+                let endDist = Math.sqrt(endDx * endDx + endDy * endDy);
+                let endX = p2.x - (endDx / endDist) * (r + 4); 
+                let endY = p2.y - (endDy / endDist) * (r + 4);
+
+                svg += `<path d="M ${startX} ${startY} Q ${ctrlX} ${ctrlY} ${endX} ${endY}" class="st-edge" marker-end="url(#arrowhead)" />`;
+
+                let midX = 0.25 * startX + 0.5 * ctrlX + 0.25 * endX;
+                let midY = 0.25 * startY + 0.5 * ctrlY + 0.25 * endY;
+
+                svg += `<rect x="${midX - textWidth/2 - 4}" y="${midY - 12}" width="${textWidth + 8}" height="24" class="st-label-bg" />`;
+                svg += `<text x="${midX}" y="${midY + 2}" class="st-label">${labelText}</text>`;
+            }
+        }
+
+        states.forEach(s => {
+            let pos = positions[s];
+            svg += `<circle cx="${pos.x}" cy="${pos.y}" r="${r}" class="st-node" />`;
+            let nodeText = model === 'Moore' ? `${s} / ${mooreOutput[s]}` : s;
+            svg += `<text x="${pos.x}" y="${pos.y + 2}" class="st-text">${nodeText}</text>`;
+        });
 
         svg += `</svg>`;
         return svg;
     }
 
     function generateCircuit() {
-        const parsed = parseInput();
-        if(!parsed) { alert("請輸入有效的狀態表資料！"); return; }
-        
-        const { rawData, stateMap, ffCount } = parsed;
-        const ffType = document.querySelector('input[name="ff"]:checked').value;
-        const numVars = ffCount + 1; 
-        
-        const varNames = ffCount === 2 ? ['Q1', 'Q2', 'X'] : ['Q1', 'X'];
-        const totalRows = Math.pow(2, numVars);
-        
-        document.getElementById('outputSection').classList.remove('hidden');
-        document.getElementById('stateAllocationInfo').innerHTML = 
-            `偵測到 <strong>${Object.keys(stateMap).length}</strong> 個狀態，自動配置 <strong>${ffCount}</strong> 個正反器。<br>
-             狀態編碼: ` + Object.entries(stateMap).map(([s,c]) => `${s}=${c}`).join(', ');
-        
-        let truthTable = Array(totalRows).fill().map(() => ({ nsQ: Array(ffCount).fill('X'), z: 'X' }));
-        rawData.forEach(row => {
-            if(stateMap[row.ps] && (row.x === '0' || row.x === '1')) {
-                let keyBin = stateMap[row.ps] + row.x;
-                let idx = parseInt(keyBin, 2);
-                if(stateMap[row.ns]) {
-                    truthTable[idx].nsQ = stateMap[row.ns].split('');
+        try {
+            const parsed = parseInput();
+            if(!parsed) { alert("請輸入有效的狀態表資料！"); return; }
+            
+            const { rawData, stateMap, ffCount } = parsed;
+            const ffType = document.querySelector('input[name="ff"]:checked').value;
+            const model = document.querySelector('input[name="model"]:checked').value;
+            const numVars = ffCount + 1; 
+            
+            const varNames = ffCount === 3 ? ['Q1', 'Q2', 'Q3', 'X'] : (ffCount === 2 ? ['Q1', 'Q2', 'X'] : ['Q1', 'X']);
+            const totalRows = Math.pow(2, numVars);
+            
+            document.getElementById('outputSection').classList.remove('hidden');
+            document.getElementById('stateAllocationInfo').innerHTML = 
+                `偵測到 <strong>${Object.keys(stateMap).length}</strong> 個狀態，自動配置 <strong>${ffCount}</strong> 個正反器。<br>
+                 狀態編碼: ` + Object.entries(stateMap).map(([s,c]) => `${s}=${c}`).join(', ');
+            
+            let truthTable = Array(totalRows).fill().map(() => ({ nsQ: Array(ffCount).fill('X'), z: 'X' }));
+            rawData.forEach(row => {
+                if(stateMap[row.ps] && (row.x === '0' || row.x === '1')) {
+                    let keyBin = stateMap[row.ps] + row.x;
+                    let idx = parseInt(keyBin, 2);
+                    if(stateMap[row.ns]) {
+                        truthTable[idx].nsQ = stateMap[row.ns].split('');
+                    }
+                    truthTable[idx].z = row.z;
                 }
-                truthTable[idx].z = row.z;
+            });
+            
+            let pinsData = {};
+            let setupPins = (prefix) => {
+                if(ffType==='D' || ffType==='T') pinsData[ffType+prefix] = [];
+                else { pinsData[ffType[0]+prefix] = []; pinsData[ffType[1]+prefix] = []; }
+            };
+            
+            if(ffCount === 3) { setupPins('1'); setupPins('2'); setupPins('3'); }
+            else if(ffCount === 2) { setupPins('1'); setupPins('2'); } 
+            else { setupPins('1'); }
+            pinsData['Z'] = [];
+            
+            truthTable.forEach((row, idx) => {
+                let keyBin = idx.toString(2).padStart(numVars, '0');
+                if(ffCount === 3) {
+                    let ex1 = getExcitation(ffType, keyBin[0], row.nsQ[0]);
+                    let ex2 = getExcitation(ffType, keyBin[1], row.nsQ[1]);
+                    let ex3 = getExcitation(ffType, keyBin[2], row.nsQ[2]);
+                    if(ffType==='D'||ffType==='T'){ 
+                        pinsData[ffType+'1'].push(ex1.p1); pinsData[ffType+'2'].push(ex2.p1); pinsData[ffType+'3'].push(ex3.p1);
+                    } else { 
+                        pinsData[ffType[0]+'1'].push(ex1.p1); pinsData[ffType[1]+'1'].push(ex1.p2); 
+                        pinsData[ffType[0]+'2'].push(ex2.p1); pinsData[ffType[1]+'2'].push(ex2.p2); 
+                        pinsData[ffType[0]+'3'].push(ex3.p1); pinsData[ffType[1]+'3'].push(ex3.p2); 
+                    }
+                } else if(ffCount === 2) {
+                    let ex1 = getExcitation(ffType, keyBin[0], row.nsQ[0]);
+                    let ex2 = getExcitation(ffType, keyBin[1], row.nsQ[1]);
+                    if(ffType==='D'||ffType==='T'){ pinsData[ffType+'1'].push(ex1.p1); pinsData[ffType+'2'].push(ex2.p1); }
+                    else { pinsData[ffType[0]+'1'].push(ex1.p1); pinsData[ffType[1]+'1'].push(ex1.p2); 
+                           pinsData[ffType[0]+'2'].push(ex2.p1); pinsData[ffType[1]+'2'].push(ex2.p2); }
+                } else {
+                    let ex1 = getExcitation(ffType, keyBin[0], row.nsQ[0]);
+                    if(ffType==='D'||ffType==='T'){ pinsData[ffType+'1'].push(ex1.p1); }
+                    else { pinsData[ffType[0]+'1'].push(ex1.p1); pinsData[ffType[1]+'1'].push(ex1.p2); }
+                }
+                pinsData['Z'].push(row.z);
+            });
+            
+            let sortedPinKeys = Object.keys(pinsData).sort((a, b) => {
+                if (a === 'Z') return 1;
+                if (b === 'Z') return -1;
+                let numA = parseInt(a.replace(/\D/g, '') || "0");
+                let numB = parseInt(b.replace(/\D/g, '') || "0");
+                if (numA !== numB) return numA - numB;
+                return a.localeCompare(b);
+            });
+            
+            const eqResult = document.getElementById('eqResult');
+            const kmapResult = document.getElementById('kmapResult');
+            eqResult.innerHTML = ''; kmapResult.innerHTML = '';
+            
+            let sortedEquations = [];
+            for (let pin of sortedPinKeys) {
+                let data = pinsData[pin];
+                let eq = solveLogic(data, numVars, varNames);
+                sortedEquations.push({ pin, eq });
+                eqResult.innerHTML += `<div class="eq-item">${pin} = <span style="color:#0056b3">${eq.str}</span></div>`;
+                
+                if (ffCount === 3) {
+                    kmapResult.innerHTML += createKMap4Var(pin, data);
+                } else if (ffCount === 2) {
+                    kmapResult.innerHTML += createKMap3Var(pin, data);
+                } else {
+                    kmapResult.innerHTML += createKMap2Var(pin, data);
+                }
             }
-        });
-        
-        let pinsData = {};
-        let setupPins = (prefix) => {
-            if(ffType==='D' || ffType==='T') pinsData[ffType+prefix] = [];
-            else { pinsData[ffType[0]+prefix] = []; pinsData[ffType[1]+prefix] = []; }
-        };
-        if(ffCount === 2) { setupPins('1'); setupPins('2'); } 
-        else { setupPins('1'); }
-        pinsData['Z'] = [];
-        
-        truthTable.forEach((row, idx) => {
-            let keyBin = idx.toString(2).padStart(numVars, '0');
-            if(ffCount === 2) {
-                let ex1 = getExcitation(ffType, keyBin[0], row.nsQ[0]);
-                let ex2 = getExcitation(ffType, keyBin[1], row.nsQ[1]);
-                if(ffType==='D'||ffType==='T'){ pinsData[ffType+'1'].push(ex1.p1); pinsData[ffType+'2'].push(ex2.p1); }
-                else { pinsData[ffType[0]+'1'].push(ex1.p1); pinsData[ffType[1]+'1'].push(ex1.p2); 
-                       pinsData[ffType[0]+'2'].push(ex2.p1); pinsData[ffType[1]+'2'].push(ex2.p2); }
-            } else {
-                let ex1 = getExcitation(ffType, keyBin[0], row.nsQ[0]);
-                if(ffType==='D'||ffType==='T'){ pinsData[ffType+'1'].push(ex1.p1); }
-                else { pinsData[ffType[0]+'1'].push(ex1.p1); pinsData[ffType[1]+'1'].push(ex1.p2); }
-            }
-            pinsData['Z'].push(row.z);
-        });
-        
-        let sortedPinKeys = Object.keys(pinsData).sort((a, b) => {
-            if (a === 'Z') return 1;
-            if (b === 'Z') return -1;
-            let numA = parseInt(a.replace(/\D/g, '') || "0");
-            let numB = parseInt(b.replace(/\D/g, '') || "0");
-            if (numA !== numB) return numA - numB;
-            return a.localeCompare(b);
-        });
-        
-        const eqResult = document.getElementById('eqResult');
-        const kmapResult = document.getElementById('kmapResult');
-        eqResult.innerHTML = ''; kmapResult.innerHTML = '';
-        
-        let sortedEquations = [];
-        for (let pin of sortedPinKeys) {
-            let data = pinsData[pin];
-            let eq = solveLogic(data, numVars, varNames);
-            sortedEquations.push({ pin, eq });
-            eqResult.innerHTML += `<div class="eq-item">${pin} = <span style="color:#0056b3">${eq.str}</span></div>`;
-            kmapResult.innerHTML += ffCount === 2 ? createKMap3Var(pin, data) : createKMap2Var(pin, data);
-        }
 
-        document.getElementById('svgContainer').innerHTML = drawLogicCircuit(ffCount, ffType, sortedEquations);
-        
-        // 為了在手機版體驗更好，算完後把畫面自動滾動到輸出區的頂部
-        setTimeout(() => {
-            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+            document.getElementById('svgContainer').innerHTML = drawLogicCircuit(ffCount, ffType, sortedEquations);
+            document.getElementById('stateDiagramContainer').innerHTML = drawStateDiagram(rawData, stateMap, model);
+            
+            setTimeout(() => {
+                document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+
+        } catch (error) {
+            console.error(error);
+            alert("運算過程發生異常，請檢查資料格式是否正確或聯絡開發者。\n錯誤訊息: " + error.message);
+        }
     }
 
     window.onload = initTable;
